@@ -158,13 +158,20 @@ describe('ProductsService', () => {
       mockContractorCompany,
     );
 
+    jest
+      .spyOn(productsService, 'getAllCompanies')
+      .mockResolvedValue([contractorCompany]);
+
+    const productExpiration = new Date();
+    productExpiration.setFullYear(productExpiration.getFullYear() + 1);
+
     const mockProductDto: CreateProductDto = {
       name: 'Banana',
       description: 'Fruta tropical deliciosa',
       price: 1.5,
       quantity: 50,
       brand: 'Frutas Tropicais',
-      expiration_date: new Date('2024-04-10'),
+      expiration_date: productExpiration,
       category: 'Frutas',
       picture: 'https://www.google.com.br/image.png',
       bar_code: '1234567890123',
@@ -178,7 +185,7 @@ describe('ProductsService', () => {
     const mockClient: ClientEntity = {
       id: 1,
       createdAt: new Date(),
-      isOng: false,
+      isOng: true,
       updatedAt: new Date(),
       email: 'client@example.com',
       cpf_cnpj: '123.456.789-00',

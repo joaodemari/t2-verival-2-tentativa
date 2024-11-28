@@ -183,8 +183,8 @@ export class ProductsService {
             Math.sin(X1toRad) * Math.sin(X2toRad),
         ) * 6371;
 
-      if (clientRadius >= distance)
-        inRangeCompanies.push({ ...company, distance });
+      if (clientRadius >= distance) console.log('adicionou no in RANGE');
+      inRangeCompanies.push({ ...company, distance });
     }
 
     if (inRangeCompanies.length === 0)
