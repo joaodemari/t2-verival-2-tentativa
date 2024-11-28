@@ -183,15 +183,17 @@ export class ProductsService {
             Math.sin(X1toRad) * Math.sin(X2toRad),
         ) * 6371;
 
-      if (clientRadius >= distance) console.log('adicionou no in RANGE');
-      inRangeCompanies.push({ ...company, distance });
+      if (clientRadius >= distance) {
+        inRangeCompanies.push({ ...company, distance });
+      }
     }
 
-    if (inRangeCompanies.length === 0)
+    if (inRangeCompanies.length === 0) {
       throw new HttpException(
         'Nenhuma empresa encontrada no raio especificado',
         400,
       );
+    }
 
     const companyIds = inRangeCompanies.map((company) => company.id);
     let products = await this.productRepository

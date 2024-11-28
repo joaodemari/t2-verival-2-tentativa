@@ -2,19 +2,17 @@ import { DataSource, DataSourceOptions } from 'typeorm';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 require('dotenv').config({ path: `.env.${process.env.NODE_ENV}` });
 
-const isLocal =
-  process.env.DB_HOST.includes('localhost') ||
-  process.env.DB_HOST.includes('amazonaws');
+const isLocal = true;
 
 export const dbdatasource: DataSourceOptions = {
   // TypeORM PostgreSQL DB Drivers
-  type: process.env.DB_TYPE as 'postgres',
-  host: process.env.DB_HOST,
-  port: Number(process.env.DB_PORT),
-  username: process.env.DB_USER,
-  password: process.env.DB_PSSWRD,
+  type: 'postgres',
+  host: 'aws-0-us-west-1.pooler.supabase.com',
+  port: 6543,
+  username: 'postgres.yibpjqmzvcpkkeuzqxdz',
+  password: 'Ln9r5@CB4eDfMW',
   // Database name
-  database: process.env.DB_BASE,
+  database: 'postgres',
   // Synchronize database schema with entities
   synchronize: true,
   ssl: !isLocal,

@@ -145,8 +145,8 @@ describe('ProductsService', () => {
       email: 'contato@empresaexemplo.com',
       address: {
         formattedName: 'Rua Exemplo',
-        latitude: '23',
-        longitude: '46',
+        latitude: '-23.550520',
+        longitude: '-46.633308',
       },
       cnpj: '12.345.678/0001-99',
       password: 'senhaSegura123',
@@ -182,6 +182,7 @@ describe('ProductsService', () => {
       contractorCompany.id,
     );
 
+    jest.spyOn(productRepository, 'query').mockResolvedValue([product1]);
     const mockClient: ClientEntity = {
       id: 1,
       createdAt: new Date(),
@@ -201,9 +202,9 @@ describe('ProductsService', () => {
         sub: mockClient.id,
         email: mockClient.email,
       },
-      23,
-      46,
-      100000,
+      -23.55562,
+      -46.533308,
+      20,
     );
 
     expect(result).toHaveLength(1);
@@ -211,5 +212,81 @@ describe('ProductsService', () => {
       name: 'Banana',
       distance: expect.any(Number),
     });
+  });
+
+  it('given the distance between longitudes and latitudeas are more than 10km, should return 0 products from companies within the specified radius', async () => {
+    jest
+      .spyOn(s3Service, 'uploadFile')
+      .mockResolvedValue('https://s3.bucket/picture.png');
+    const mockContractorCompany: CreateContractorCompaniesDto = {
+      name: 'Empresa Exemplo',
+      email: 'contato@empresaexemplo.com',
+      address: {
+        formattedName: 'Rua Exemplo',
+        latitude: '-23.550520',
+        longitude: '-46.633308',
+      },
+      cnpj: '12.345.678/0001-99',
+      password: 'senhaSegura123',
+      confirmPassword: 'senhaSegura123',
+      workingHours: '08:00-18:00',
+    };
+
+    const contractorCompany = await contractorCompaniesService.create(
+      mockContractorCompany,
+    );
+
+    jest
+      .spyOn(productsService, 'getAllCompanies')
+      .mockResolvedValue([contractorCompany]);
+
+    const productExpiration = new Date();
+    productExpiration.setFullYear(productExpiration.getFullYear() + 1);
+
+    const mockProductDto: CreateProductDto = {
+      name: 'Banana',
+      description: 'Fruta tropical deliciosa',
+      price: 1.5,
+      quantity: 50,
+      brand: 'Frutas Tropicais',
+      expiration_date: productExpiration,
+      category: 'Frutas',
+      picture: 'https://www.google.com.br/image.png',
+      bar_code: '1234567890123',
+    };
+
+    const product1 = await productsService.create(
+      mockProductDto,
+      contractorCompany.id,
+    );
+
+    jest.spyOn(productRepository, 'query').mockResolvedValue([product1]);
+    const mockClient: ClientEntity = {
+      id: 1,
+      createdAt: new Date(),
+      isOng: true,
+      updatedAt: new Date(),
+      email: 'client@example.com',
+      cpf_cnpj: '123.456.789-00',
+      nome: 'Cliente Exemplo',
+      password: 'senhaSegura123',
+      tipo: TipoCliente.PessoaFisica,
+    };
+
+    jest.spyOn(clientsService, 'findOne').mockResolvedValue(mockClient);
+
+    try {
+      const result = await productsService.findByLocation(
+        {
+          sub: mockClient.id,
+          email: mockClient.email,
+        },
+        -23.55562,
+        -46.533308,
+        10,
+      );
+    } catch (e) {
+      expect(e.message).toBe('Nenhuma empresa encontrada no raio especificado');
+    }
   });
 });
