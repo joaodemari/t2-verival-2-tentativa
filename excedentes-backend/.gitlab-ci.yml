@@ -1,0 +1,76 @@
+stages:
+  - build-dev
+  - build-prod
+  - render
+  - ec2
+
+build-dev:
+  image: docker:latest
+  stage: build-dev
+  services:
+    - docker:dind
+  variables:
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_DRIVER: overlay2
+    DOCKER_TLS_CERTDIR: ""
+  before_script:
+    - unset DOCKER_HOST
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+  script:
+    - echo "Building the application"
+    - docker build --pull -t excedentes/api:dev .
+    - docker push excedentes/api:dev
+  rules:
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "dev"'
+    - if: '$CI_COMMIT_BRANCH == "dev"'
+      changes:
+        - "*"
+      exists:
+        - Dockerfile
+      when: always
+
+build-prod:
+  image: docker:latest
+  stage: build-prod
+  services:
+    - docker:dind  
+  before_script:
+    - unset DOCKER_HOST
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+  script:
+    - echo "Building the application for production"
+    - docker build --pull -t excedentes/api:latest .
+    - docker push excedentes/api:latest
+  rules:
+    - if: '$CI_COMMIT_REF_NAME == "main"'
+      changes:
+        - "*"
+      exists:
+        - Dockerfile
+      when: always
+
+deploy_to_render:
+  stage: render
+  image: mcr.microsoft.com/powershell:latest
+  only:
+    - dev
+  script:
+    - >
+      pwsh -Command "Invoke-WebRequest -Method Post
+      -Uri 'https://api.render.com/deploy/srv-co3hut21hbls73bihu50?key=bC2mZkEH88E'"
+
+deploy_to_ec2:
+  stage: ec2
+  image: alpine:latest
+  only:
+    - main
+  before_script:
+    - apk update && apk add openssh-client
+  script:
+    - echo "Deploying to AWS EC2"
+    - mkdir -p ~/.ssh
+    - echo -e "$EC2_PRIVATE_KEY" > ~/.ssh/id_rsa
+    - chmod 600 ~/.ssh/id_rsa
+    - ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ec2-user@ec2-3-23-200-31.us-east-2.compute.amazonaws.com "docker pull excedentes/api:latest && docker stop excedentes-api || true && docker rm excedentes-api || true"
+    - ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ec2-user@ec2-3-23-200-31.us-east-2.compute.amazonaws.com "docker run -d --name excedentes-api -p 5050:5050 excedentes/api:latest"
+

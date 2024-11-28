@@ -1,0 +1,37 @@
+{
+    "categorias": [
+        {
+            "name": "Hortifruti",
+            "id": 1
+        },
+        {
+            "name": "Padaria",
+            "id": 2
+        },
+        {
+            "name": "Frios e Laticínios",
+            "id": 3
+        },
+        {
+            "name": "Congelados",
+            "id": 4
+        },
+        {
+            "name": "Carnes",
+            "id": 5
+        },
+        {
+            "name": "Bebidas",
+            "id": 6
+        },
+        {
+            "name": "Dietas Especiais",
+            "id": 7
+        },
+        {
+            "name": "Mercearia",
+            "id": 8
+        }
+    ]
+}
+  
